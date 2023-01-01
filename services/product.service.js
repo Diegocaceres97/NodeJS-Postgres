@@ -1,19 +1,22 @@
 const faker = require('faker');
 const boom = require('@hapi/boom');
 
+const { models } = require('./../libs/sequelize')
 const sequelize = require('../libs/sequelize');
+const setupModels = require('../db/models');
+const { query } = require('express');
 
 class ProductsService {
 
   constructor(){
-    this.products = [];
+    //this.products = [];
     this.generate();
    /*  this.pool = pool;
     this.pool.on('error',(err)=>console.log(err)); */
   }
 
   generate() {
-    const limit = 100;
+   /*  const limit = 100;
     for (let index = 0; index < limit; index++) {
       this.products.push({
         id: faker.datatype.uuid(),
@@ -22,26 +25,36 @@ class ProductsService {
         image: faker.image.imageUrl(),
         isBlock: faker.datatype.boolean(),
       });
-    }
+    } */
   }
 
   async create(data) {
-    const newProduct = {
+   /*  const newProduct = {
       id: faker.datatype.uuid(),
       ...data
     }
-    this.products.push(newProduct);
+    this.products.push(newProduct); */
+    const newProduct = await models.Product.create(data);
     return newProduct;
   }
 
-  async find() {
-    const query = 'SELECT * FROM tasks';
-    const [data, metadata] = await sequelize.query(query);
-    return data;
+  async find(query) {
+    const options = {
+      include: ['category']
+    }
+
+    const { limit, offset } = query;
+    if(limit && offset){
+      options.limit = limit;
+      options.offset = offset;
+    }
+
+    const products = await models.Product.findAll(options);
+    return products;
   }
 
   async findOne(id) {
-    const product = this.products.find(item => item.id === id);
+    const product = await models.Product.findByPk(id);
     if (!product) {
       throw boom.notFound('product not found');
     }
